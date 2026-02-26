@@ -12,6 +12,7 @@ export default function Results() {
   const [totalVotesCast, setTotalVotesCast] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [totalVoters, setTotalVoters] = useState(0);
 
   const fetchResults = async () => {
     setIsRefreshing(true);
@@ -24,6 +25,13 @@ export default function Results() {
         0,
       );
       setTotalVotesCast(total);
+
+      // Fetch total unique voters (how many distinct matric numbers have voted)
+      const { count } = await supabase
+        .from('ballots')
+        .select('*', { count: 'exact', head: true });
+
+      setTotalVoters(count || 0);
 
       const now = new Date();
       setLastUpdated(
@@ -151,11 +159,22 @@ export default function Results() {
           )}
         </div>
 
-        <div className="mt-12 text-left border-t border-white/10 pt-6 flex justify-between items-center bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-6 rounded-2xl">
-          <p className="text-xs tracking-wider uppercase font-semibold text-slate-400">
-            Total Valid Votes System-Wide
-          </p>
-          <p className="text-3xl font-bold text-white">{totalVotesCast}</p>
+        <div className="mt-12 text-left border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl p-6 rounded-2xl">
+          <div className="text-center sm:text-left">
+            <p className="text-xs tracking-wider uppercase font-semibold text-slate-400">
+              Total Valid Votes Distributed
+            </p>
+            <p className="text-3xl font-bold text-white mt-1">{totalVotesCast}</p>
+          </div>
+
+          <div className="w-full sm:w-px h-px sm:h-12 bg-white/10 hidden sm:block"></div>
+
+          <div className="text-center sm:text-right">
+            <p className="text-xs tracking-wider uppercase font-semibold text-slate-400">
+              Total Unique Voters
+            </p>
+            <p className="text-3xl font-bold text-emerald-400 mt-1">{totalVoters}</p>
+          </div>
         </div>
       </div>
     </div>
