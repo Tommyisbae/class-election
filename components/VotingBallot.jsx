@@ -22,10 +22,14 @@ export default function VotingBallot({ candidates }) {
     setErrorMessage("");
 
     try {
-      // FIXED: Correct API endpoint
       const response = await fetch("/api/submit-vote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+
+        // 👇👇👇 THIS IS THE MISSING KEY. ADD IT NOW. 👇👇👇
+        credentials: "include",
+        // 👆👆👆 Without this, the secure cookie stays on the laptop and doesn't go to the server.
+
         body: JSON.stringify({ candidateIds: selectedIds }),
       });
       const data = await response.json();
