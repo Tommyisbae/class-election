@@ -8,49 +8,28 @@ export default function VotingBallot({ candidates }) {
 
   const handleToggle = (candidateId) => {
     setErrorMessage("");
-
     if (selectedIds.includes(candidateId)) {
       setSelectedIds(selectedIds.filter((id) => id !== candidateId));
     } else {
-      if (selectedIds.length < 5) {
-        setSelectedIds([...selectedIds, candidateId]);
-      } else {
-        setErrorMessage("Maximum 5 candidates allowed.");
-      }
+      if (selectedIds.length < 5) setSelectedIds([...selectedIds, candidateId]);
+      else setErrorMessage("Max 5 candidates.");
     }
-  };
-
-  const handleLogout = async () => {
-    window.location.reload();
   };
 
   const handleSubmit = async () => {
-    if (selectedIds.length === 0) {
-      setErrorMessage("Select at least 1 candidate.");
-      return;
-    }
-
+    if (selectedIds.length === 0) return setErrorMessage("Select at least 1.");
     setIsSubmitting(true);
     setErrorMessage("");
 
     try {
+      // FIXED: Correct API endpoint
       const response = await fetch("/api/submit-vote", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          candidateIds: selectedIds,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateIds: selectedIds }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit vote.");
-      }
-
+      if (!response.ok) throw new Error(data.error);
       setReceiptHash(data.receiptHash);
     } catch (error) {
       setErrorMessage(error.message);
@@ -61,31 +40,37 @@ export default function VotingBallot({ candidates }) {
 
   if (receiptHash) {
     return (
-      <div className="max-w-lg mx-auto p-12 bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl text-center mt-10 rounded-3xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-        <h2 className="text-4xl font-bold uppercase tracking-wide mb-4 text-white">
-          Vote Cast
-        </h2>
-        <p className="text-sm font-semibold tracking-wider uppercase text-emerald-400 mb-8">
-          Securely Recorded
-        </p>
-
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-6 mb-8 shadow-inner">
-          <p className="text-xs font-semibold tracking-wider uppercase mb-2 text-slate-500">
+      <div className="max-w-md mx-auto text-center mt-10">
+        <div className="w-16 h-16 bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg
+            className="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Vote Recorded</h2>
+        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded my-6">
+          <p className="text-xs text-neutral-500 uppercase mb-2">
             Receipt Hash
           </p>
-          <p className="text-xl font-mono tracking-wider break-all text-indigo-300">
+          <p className="text-xl font-mono text-blue-400 break-all">
             {receiptHash}
           </p>
         </div>
-
-        <p className="mt-6 text-xs font-semibold uppercase tracking-wider mb-8 border border-dashed border-white/20 text-slate-400 p-4 rounded-xl">
-          Screenshot this receipt for verification.
+        <p className="text-sm text-neutral-400 mb-8">
+          Please screenshot this receipt.
         </p>
-
         <button
           onClick={() => window.location.reload()}
-          className="w-full py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold uppercase tracking-wider hover:bg-white/20 transition-colors"
+          className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-sm"
         >
           Return to Login
         </button>
@@ -94,111 +79,90 @@ export default function VotingBallot({ candidates }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-6 w-full pb-32">
-      <div className="flex justify-between items-end mb-8 border-b border-white/10 pb-4">
+    <div className="w-full pb-32">
+      <div className="flex justify-between items-end mb-6">
         <div>
-          <h2 className="text-4xl font-bold uppercase tracking-wide text-white">
-            Ballot
-          </h2>
-          <p className="font-semibold tracking-wider uppercase text-xs mt-2 text-slate-400">
-            Select up to{" "}
-            <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 ml-1 rounded-full text-[10px] tracking-widest shadow-lg shadow-indigo-500/20">
-              5 candidates
-            </span>
-          </p>
+          <h2 className="text-2xl font-bold">Ballot</h2>
+          <p className="text-neutral-400 text-sm">Select up to 5 candidates.</p>
         </div>
         <button
-          onClick={handleLogout}
-          className="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full border border-white/10 hover:bg-white/10"
+          onClick={() => window.location.reload()}
+          className="text-xs text-red-500 hover:text-red-400"
         >
-          Cancel & Log Out
+          Cancel
         </button>
       </div>
 
       {errorMessage && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl mb-8 font-medium text-sm tracking-wide">
-          Error: {errorMessage}
+        <div className="bg-red-900/50 border border-red-900 text-red-200 p-3 rounded mb-6 text-sm">
+          {errorMessage}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-        {candidates.map((candidate) => {
-          const cId = candidate.id || candidate.candidate_id;
-          const isSelected = selectedIds.includes(cId);
+      <div className="space-y-3">
+        {candidates.map((c) => {
+          const isSelected = selectedIds.includes(c.candidate_id || c.id);
           const isDisabled = !isSelected && selectedIds.length >= 5;
 
           return (
-            <label
-              key={cId}
-              className={`flex items-start p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+            <div
+              key={c.candidate_id || c.id}
+              onClick={() =>
+                !isDisabled && handleToggle(c.candidate_id || c.id)
+              }
+              className={`flex items-center p-4 rounded border cursor-pointer transition-colors ${
                 isSelected
-                  ? "bg-indigo-500/10 ring-1 ring-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:-translate-y-1"
-                  : "bg-white/5 border-white/10 hover:border-indigo-500/50 hover:bg-white/10 hover:-translate-y-1"
-              } ${isDisabled ? "opacity-30 cursor-not-allowed hover:translate-y-0" : ""}`}
+                  ? "bg-blue-900/20 border-blue-600"
+                  : "bg-neutral-900 border-neutral-800 hover:border-neutral-600"
+              } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              <div className="relative flex items-center mt-1">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={isSelected}
-                  disabled={isDisabled}
-                  onChange={() => handleToggle(cId)}
-                />
-                <div
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                    isSelected
-                      ? "bg-gradient-to-br from-blue-400 to-indigo-500 border-transparent shadow-[0_0_10px_rgba(99,102,241,0.5)]"
-                      : "border-slate-600 bg-black/20"
-                  }`}
-                >
-                  {isSelected && (
-                    <svg
-                      className="w-3.5 h-3.5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+              <div
+                className={`w-5 h-5 rounded border flex items-center justify-center mr-4 ${
+                  isSelected
+                    ? "bg-blue-600 border-blue-600"
+                    : "border-neutral-600"
+                }`}
+              >
+                {isSelected && (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth="3"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  )}
-                </div>
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
               </div>
-
-              <div className="ml-6 flex-1">
-                <p className="text-2xl font-bold uppercase tracking-wide text-white">
-                  {candidate.name}
-                </p>
-                <p className="text-xs tracking-wider uppercase font-semibold text-indigo-300 mt-1">
-                  {candidate.post || "Senatorial Candidate"}
-                </p>
-              </div>
-            </label>
+              <span className="font-medium text-lg">{c.name}</span>
+            </div>
           );
         })}
       </div>
 
-      {/* Floating Glassmorphic Bottom Bar */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm sm:max-w-md md:max-w-2xl px-4 z-50">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-full p-2 pl-8 flex justify-between items-center shadow-[0_20px_40px_rgba(0,0,0,0.5)] border-t border-white/20">
-          <span className="font-bold text-2xl text-white">
-            {selectedIds.length}{" "}
-            <span className="text-slate-500 text-lg">/ 5</span>
+      <div className="fixed bottom-0 left-0 w-full bg-neutral-950 border-t border-neutral-800 p-4">
+        <div className="max-w-2xl mx-auto flex justify-between items-center">
+          <span className="text-neutral-400 font-medium">
+            <span
+              className={
+                selectedIds.length === 5 ? "text-blue-500" : "text-white"
+              }
+            >
+              {selectedIds.length}
+            </span>{" "}
+            / 5 Selected
           </span>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || selectedIds.length === 0}
-            className={`py-3 px-8 rounded-full text-white font-bold text-sm tracking-wider uppercase transition-all ${
-              isSubmitting || selectedIds.length === 0
-                ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/10"
-                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:-translate-y-0.5 border border-indigo-400/30"
-            }`}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded"
           >
-            {isSubmitting ? "Submitting..." : "Cast Vote"}
+            {isSubmitting ? "Submitting..." : "Submit Vote"}
           </button>
         </div>
       </div>
