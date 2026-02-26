@@ -26,12 +26,18 @@ export default function Results() {
       );
       setTotalVotesCast(total);
 
-      // Fetch total unique voters (how many distinct matric numbers have voted)
-      const { count } = await supabase
-        .from('ballots')
-        .select('*', { count: 'exact', head: true });
+      // Fetch total unique voters by getting all votes and counting unique receipt_hashes
+      const { data: votesData, error: viewError } = await supabase
+        .from('votes')
+        .select('receipt_hash');
 
-      setTotalVoters(count || 0);
+      if (votesData) {
+        // Create a Set to naturally filter out duplicate receipt hashes
+        const uniqueHashes = new Set(votesData.map(vote => vote.receipt_hash));
+        setTotalVoters(uniqueHashes.size);
+      } else {
+        setTotalVoters(0);
+      }
 
       const now = new Date();
       setLastUpdated(
