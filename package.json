@@ -9,7 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "cookie": "^1.1.1",
+    "geist": "^1.7.0",
+    "jsonwebtoken": "^9.0.3",
     "next": "16.1.6",
+    "nodemailer": "^8.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
