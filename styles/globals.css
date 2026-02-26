@@ -4,8 +4,10 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #000000;
+    --background: #0B0F19;
+    /* Deep Slate/Midnight Blue */
+    --foreground: #F8FAFC;
+    /* Bright White */
   }
 }
 
@@ -15,11 +17,4 @@ body {
   font-family: "Geist", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Force removal of gradients and transparent effects */
-* {
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  background-image: none !important;
 }
