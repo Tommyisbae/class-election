@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto"; // <--- ADD THIS MISSING IMPORT
 import { serialize } from "cookie"; // <--- ADD THIS IMPORT
 
 const supabase = createClient(

@@ -34,7 +34,7 @@ export default function VotingBallot({ candidates }) {
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/vote", {
+      const response = await fetch("/api/submit-vote", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +101,10 @@ export default function VotingBallot({ candidates }) {
             Ballot
           </h2>
           <p className="font-semibold tracking-wider uppercase text-xs mt-2 text-slate-400">
-            Select up to <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 ml-1 rounded-full text-[10px] tracking-widest shadow-lg shadow-indigo-500/20">5 candidates</span>
+            Select up to{" "}
+            <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 ml-1 rounded-full text-[10px] tracking-widest shadow-lg shadow-indigo-500/20">
+              5 candidates
+            </span>
           </p>
         </div>
         <button
@@ -127,10 +130,11 @@ export default function VotingBallot({ candidates }) {
           return (
             <label
               key={cId}
-              className={`flex items-start p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${isSelected
+              className={`flex items-start p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                isSelected
                   ? "bg-indigo-500/10 ring-1 ring-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:-translate-y-1"
                   : "bg-white/5 border-white/10 hover:border-indigo-500/50 hover:bg-white/10 hover:-translate-y-1"
-                } ${isDisabled ? "opacity-30 cursor-not-allowed hover:translate-y-0" : ""}`}
+              } ${isDisabled ? "opacity-30 cursor-not-allowed hover:translate-y-0" : ""}`}
             >
               <div className="relative flex items-center mt-1">
                 <input
@@ -141,14 +145,25 @@ export default function VotingBallot({ candidates }) {
                   onChange={() => handleToggle(cId)}
                 />
                 <div
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
-                    ? "bg-gradient-to-br from-blue-400 to-indigo-500 border-transparent shadow-[0_0_10px_rgba(99,102,241,0.5)]"
-                    : "border-slate-600 bg-black/20"
-                    }`}
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    isSelected
+                      ? "bg-gradient-to-br from-blue-400 to-indigo-500 border-transparent shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                      : "border-slate-600 bg-black/20"
+                  }`}
                 >
                   {isSelected && (
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-3.5 h-3.5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   )}
                 </div>
@@ -171,15 +186,17 @@ export default function VotingBallot({ candidates }) {
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-sm sm:max-w-md md:max-w-2xl px-4 z-50">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-full p-2 pl-8 flex justify-between items-center shadow-[0_20px_40px_rgba(0,0,0,0.5)] border-t border-white/20">
           <span className="font-bold text-2xl text-white">
-            {selectedIds.length} <span className="text-slate-500 text-lg">/ 5</span>
+            {selectedIds.length}{" "}
+            <span className="text-slate-500 text-lg">/ 5</span>
           </span>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || selectedIds.length === 0}
-            className={`py-3 px-8 rounded-full text-white font-bold text-sm tracking-wider uppercase transition-all ${isSubmitting || selectedIds.length === 0
-              ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/10"
-              : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:-translate-y-0.5 border border-indigo-400/30"
-              }`}
+            className={`py-3 px-8 rounded-full text-white font-bold text-sm tracking-wider uppercase transition-all ${
+              isSubmitting || selectedIds.length === 0
+                ? "bg-white/5 text-slate-500 cursor-not-allowed border border-white/10"
+                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:-translate-y-0.5 border border-indigo-400/30"
+            }`}
           >
             {isSubmitting ? "Submitting..." : "Cast Vote"}
           </button>

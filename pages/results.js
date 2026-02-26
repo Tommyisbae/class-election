@@ -16,6 +16,8 @@ export default function Results() {
 
   const fetchResults = async () => {
     setIsRefreshing(true);
+
+    // 1. Get Candidate Scores
     const { data, error } = await supabase.rpc("get_live_results");
 
     if (data) {
@@ -24,19 +26,15 @@ export default function Results() {
         (sum, item) => sum + Number(item.vote_count),
         0,
       );
-      setTotalVotesCast(total);
+      setTotalVotesCast(total); // Total "Checks" in boxes
 
-      // Fetch total unique voters by getting all votes and counting unique receipt_hashes
-      const { data: votesData, error: viewError } = await supabase
-        .from('votes')
-        .select('receipt_hash');
+      // 2. SECURELY Get Total Unique Voters (Headcount)
+      // We use the new RPC function instead of querying the table directly
+      const { data: voterCount, error: countError } =
+        await supabase.rpc("get_voter_count");
 
-      if (votesData) {
-        // Create a Set to naturally filter out duplicate receipt hashes
-        const uniqueHashes = new Set(votesData.map(vote => vote.receipt_hash));
-        setTotalVoters(uniqueHashes.size);
-      } else {
-        setTotalVoters(0);
+      if (voterCount !== null) {
+        setTotalVoters(voterCount);
       }
 
       const now = new Date();
@@ -47,9 +45,8 @@ export default function Results() {
           second: "2-digit",
         }),
       );
-    } else if (error) {
-      console.error("Error fetching results:", error);
     }
+
     setIsRefreshing(false);
   };
 
@@ -80,10 +77,11 @@ export default function Results() {
             <button
               onClick={fetchResults}
               disabled={isRefreshing}
-              className={`w-full py-4 rounded-xl flex items-center justify-center font-bold uppercase tracking-wider transition-all shadow-lg ${isRefreshing
-                ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
-                : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-indigo-400/30 text-white hover:-translate-y-0.5"
-                }`}
+              className={`w-full py-4 rounded-xl flex items-center justify-center font-bold uppercase tracking-wider transition-all shadow-lg ${
+                isRefreshing
+                  ? "bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-indigo-400/30 text-white hover:-translate-y-0.5"
+              }`}
             >
               {isRefreshing ? (
                 <>
@@ -113,7 +111,10 @@ export default function Results() {
               )}
             </button>
             <p className="text-xs font-semibold tracking-wider uppercase text-slate-500">
-              Last sync: <span className="text-indigo-300">{lastUpdated || "Processing..."}</span>
+              Last sync:{" "}
+              <span className="text-indigo-300">
+                {lastUpdated || "Processing..."}
+              </span>
             </p>
           </div>
         </div>
@@ -170,7 +171,9 @@ export default function Results() {
             <p className="text-xs tracking-wider uppercase font-semibold text-slate-400">
               Total Valid Votes Distributed
             </p>
-            <p className="text-3xl font-bold text-white mt-1">{totalVotesCast}</p>
+            <p className="text-3xl font-bold text-white mt-1">
+              {totalVotesCast}
+            </p>
           </div>
 
           <div className="w-full sm:w-px h-px sm:h-12 bg-white/10 hidden sm:block"></div>
@@ -179,7 +182,9 @@ export default function Results() {
             <p className="text-xs tracking-wider uppercase font-semibold text-slate-400">
               Total Unique Voters
             </p>
-            <p className="text-3xl font-bold text-emerald-400 mt-1">{totalVoters}</p>
+            <p className="text-3xl font-bold text-emerald-400 mt-1">
+              {totalVoters}
+            </p>
           </div>
         </div>
       </div>
