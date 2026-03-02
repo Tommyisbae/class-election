@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     // 1. Fetch the voter's OTP data from Supabase
     const { data: voter, error: fetchError } = await supabase
       .from("voters")
-      .select("current_otp, otp_expiry, has_voted")
+      .select("current_otp, otp_expiry, has_voted, otp_attempts")
       .eq("matric_number", matricNumber)
       .single();
 
@@ -41,11 +41,24 @@ export default async function handler(req, res) {
         });
     }
 
-    // 3. Verify OTP Match
+    // 3. Brute-force protection: lock after 5 failed attempts
+    if (voter.otp_attempts >= 5) {
+      return res.status(429).json({
+        error:
+          "Too many failed attempts. Request a new OTP.",
+      });
+    }
+
+    // 4. Verify OTP Match
     if (voter.current_otp !== otp) {
-      return res
-        .status(401)
-        .json({ error: "Invalid OTP. Please check the code and try again." });
+      await supabase
+        .from("voters")
+        .update({ otp_attempts: (voter.otp_attempts || 0) + 1 })
+        .eq("matric_number", matricNumber);
+      const remaining = 4 - (voter.otp_attempts || 0);
+      return res.status(401).json({
+        error: `Invalid OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`,
+      });
     }
 
     // 4. Check if OTP is Expired
@@ -58,10 +71,10 @@ export default async function handler(req, res) {
         .json({ error: "This OTP has expired. Please request a new one." });
     }
 
-    // 5. OTP is valid! Clear it from the database so it can NEVER be reused
+    // 5. OTP is valid! Clear it and reset attempts
     await supabase
       .from("voters")
-      .update({ current_otp: null, otp_expiry: null })
+      .update({ current_otp: null, otp_expiry: null, otp_attempts: 0 })
       .eq("matric_number", matricNumber);
 
     // 6. Create a secure JSON Web Token (JWT) valid for 15 minutes

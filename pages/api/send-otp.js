@@ -130,12 +130,13 @@ export default async function handler(req, res) {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
 
-    // 8. Save OTP to database
+    // 8. Save OTP to database and reset attempts
     const { error: updateError } = await supabase
       .from("voters")
       .update({
         current_otp: otp,
         otp_expiry: expiryDate.toISOString(),
+        otp_attempts: 0,
       })
       .eq("matric_number", matricNumber);
 

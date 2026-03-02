@@ -10,17 +10,22 @@ const supabase = createClient(
 export default function Results() {
   const [results, setResults] = useState([]);
   const [totalVotes, setTotalVotes] = useState(0);
+  const [uniqueVoters, setUniqueVoters] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchResults = async () => {
     setIsRefreshing(true);
-    const { data } = await supabase.rpc("get_live_results");
+    const [{ data }, { data: voterCount }] = await Promise.all([
+      supabase.rpc("get_live_results"),
+      supabase.rpc("get_unique_voter_count"),
+    ]);
     if (data) {
       setResults(data);
       setTotalVotes(
         data.reduce((sum, item) => sum + Number(item.vote_count), 0),
       );
     }
+    if (voterCount !== null) setUniqueVoters(voterCount);
     setIsRefreshing(false);
   };
 
@@ -37,7 +42,9 @@ export default function Results() {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-2xl font-bold">Live Results</h1>
-          <p className="text-neutral-500 text-sm">Senatorial Election</p>
+          <p className="text-neutral-500 text-sm">
+            Senatorial Election &middot; {uniqueVoters} voter{uniqueVoters !== 1 ? "s" : ""}
+          </p>
         </div>
         <button
           onClick={fetchResults}

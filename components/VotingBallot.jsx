@@ -5,6 +5,7 @@ export default function VotingBallot({ candidates }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [receiptHash, setReceiptHash] = useState(null);
+  const [votedCandidates, setVotedCandidates] = useState([]);
 
   const handleToggle = (candidateId) => {
     setErrorMessage("");
@@ -12,12 +13,13 @@ export default function VotingBallot({ candidates }) {
       setSelectedIds(selectedIds.filter((id) => id !== candidateId));
     } else {
       if (selectedIds.length < 5) setSelectedIds([...selectedIds, candidateId]);
-      else setErrorMessage("Max 5 candidates.");
+      else setErrorMessage("You've already selected 5 candidates.");
     }
   };
 
   const handleSubmit = async () => {
-    if (selectedIds.length === 0) return setErrorMessage("Select at least 1.");
+    if (selectedIds.length !== 5)
+      return setErrorMessage("You must select exactly 5 candidates.");
     setIsSubmitting(true);
     setErrorMessage("");
 
@@ -35,6 +37,7 @@ export default function VotingBallot({ candidates }) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       setReceiptHash(data.receiptHash);
+      setVotedCandidates(data.candidates || []);
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -69,6 +72,19 @@ export default function VotingBallot({ candidates }) {
             {receiptHash}
           </p>
         </div>
+        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded mb-6 text-left">
+          <p className="text-xs text-neutral-500 uppercase mb-3">
+            You voted for
+          </p>
+          <ul className="space-y-2">
+            {votedCandidates.map((name, i) => (
+              <li key={i} className="text-sm text-neutral-200 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                {name}
+              </li>
+            ))}
+          </ul>
+        </div>
         <p className="text-sm text-neutral-400 mb-8">
           Please screenshot this receipt.
         </p>
@@ -87,7 +103,7 @@ export default function VotingBallot({ candidates }) {
       <div className="flex justify-between items-end mb-6">
         <div>
           <h2 className="text-2xl font-bold">Ballot</h2>
-          <p className="text-neutral-400 text-sm">Select up to 5 candidates.</p>
+          <p className="text-neutral-400 text-sm">Select exactly 5 candidates.</p>
         </div>
         <button
           onClick={() => window.location.reload()}
@@ -163,7 +179,7 @@ export default function VotingBallot({ candidates }) {
           </span>
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || selectedIds.length === 0}
+            disabled={isSubmitting || selectedIds.length !== 5}
             className="px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-bold rounded"
           >
             {isSubmitting ? "Submitting..." : "Submit Vote"}

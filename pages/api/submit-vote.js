@@ -38,17 +38,11 @@ export default async function handler(req, res) {
   // We no longer need matricNumber from req.body, only the candidateIds!
   const { candidateIds } = req.body;
 
-  // 1. Array Validation (The "Max 5" & "Unique" Check)
-  if (!candidateIds || candidateIds.length === 0) {
+  // 1. Array Validation (Exactly 5 & Unique Check)
+  if (!candidateIds || candidateIds.length !== 5) {
     return res
       .status(400)
-      .json({ error: "You must select at least 1 candidate." });
-  }
-
-  if (candidateIds.length > 5) {
-    return res
-      .status(400)
-      .json({ error: "You cannot select more than 5 candidates." });
+      .json({ error: "You must select exactly 5 candidates." });
   }
 
   // Remove duplicates just in case someone tried to pass [ID_1, ID_1, ID_1]
@@ -60,7 +54,21 @@ export default async function handler(req, res) {
   // 2. Generate the Anonymous Receipt Hash (e.g., VOTE-A7K9M)
   const receiptHash = `VOTE-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
-  // 3. Execute the Atomic Transaction via Supabase RPC
+  // 3. Fetch candidate names for the receipt
+  const { data: candidateRows, error: candidateError } = await supabase
+    .from("candidates")
+    .select("candidate_id, name")
+    .in("candidate_id", uniqueCandidates);
+
+  if (candidateError) {
+    return res.status(500).json({ error: "Failed to verify candidates." });
+  }
+
+  if (candidateRows.length !== uniqueCandidates.length) {
+    return res.status(400).json({ error: "One or more invalid candidate IDs." });
+  }
+
+  // 4. Execute the Atomic Transaction via Supabase RPC
   const { error } = await supabase.rpc("cast_senatorial_vote", {
     p_matric_number: matricNumber,
     p_receipt_hash: receiptHash,
@@ -83,6 +91,9 @@ export default async function handler(req, res) {
   });
   res.setHeader("Set-Cookie", expiredCookie);
 
-  // 4. Return the hash
-  return res.status(200).json({ success: true, receiptHash });
+  // 5. Return the hash and candidate names
+  const votedNames = candidateRows
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((c) => c.name);
+  return res.status(200).json({ success: true, receiptHash, candidates: votedNames });
 }
