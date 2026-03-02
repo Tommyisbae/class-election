@@ -60,22 +60,14 @@ export default function Home({ initialCandidates }) {
       {/* Simple Header */}
       <header className="flex justify-between items-center py-6 border-b border-neutral-800 mb-8">
         <div className="font-bold text-lg tracking-tight">Senate '26</div>
-        <div className="flex gap-4">
+        {timeStatus === "closed" && (
           <Link
-            href="/verify"
-            className="text-sm text-neutral-400 hover:text-white font-medium"
+            href="/results"
+            className="text-sm text-blue-500 hover:text-blue-400 font-medium"
           >
-            Verify Vote
+            Results &rarr;
           </Link>
-          {timeStatus === "closed" && (
-            <Link
-              href="/results"
-              className="text-sm text-blue-500 hover:text-blue-400 font-medium"
-            >
-              Results &rarr;
-            </Link>
-          )}
-        </div>
+        )}
       </header>
 
       <main className="flex-grow flex flex-col justify-center">

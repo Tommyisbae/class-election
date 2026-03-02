@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
-import crypto from "crypto"; // <--- ADD THIS MISSING IMPORT
-import { serialize } from "cookie"; // <--- ADD THIS IMPORT
+import { serialize } from "cookie";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -51,13 +50,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Duplicate candidates detected." });
   }
 
-  // 2. Generate the Anonymous Receipt Hash (e.g., VOTE-A7K9M)
-  const receiptHash = `VOTE-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-
-  // 3. Fetch candidate names for the receipt
+  // 2. Verify candidates exist
   const { data: candidateRows, error: candidateError } = await supabase
     .from("candidates")
-    .select("candidate_id, name")
+    .select("candidate_id")
     .in("candidate_id", uniqueCandidates);
 
   if (candidateError) {
@@ -68,10 +64,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "One or more invalid candidate IDs." });
   }
 
-  // 4. Execute the Atomic Transaction via Supabase RPC
+  // 3. Execute the Atomic Transaction via Supabase RPC
   const { error } = await supabase.rpc("cast_senatorial_vote", {
     p_matric_number: matricNumber,
-    p_receipt_hash: receiptHash,
+    p_receipt_hash: "NONE",
     p_candidate_ids: uniqueCandidates,
   });
 
@@ -91,9 +87,5 @@ export default async function handler(req, res) {
   });
   res.setHeader("Set-Cookie", expiredCookie);
 
-  // 5. Return the hash and candidate names
-  const votedNames = candidateRows
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => c.name);
-  return res.status(200).json({ success: true, receiptHash, candidates: votedNames });
+  return res.status(200).json({ success: true });
 }

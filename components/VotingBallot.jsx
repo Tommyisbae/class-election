@@ -4,7 +4,7 @@ export default function VotingBallot({ candidates }) {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [receiptHash, setReceiptHash] = useState(null);
+  const [voteSubmitted, setVoteSubmitted] = useState(false);
   const [votedCandidates, setVotedCandidates] = useState([]);
 
   const handleToggle = (candidateId) => {
@@ -36,7 +36,7 @@ export default function VotingBallot({ candidates }) {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setReceiptHash(data.receiptHash);
+      setVoteSubmitted(true);
       setVotedCandidates(data.candidates || []);
     } catch (error) {
       setErrorMessage(error.message);
@@ -45,7 +45,7 @@ export default function VotingBallot({ candidates }) {
     }
   };
 
-  if (receiptHash) {
+  if (voteSubmitted) {
     return (
       <div className="max-w-md mx-auto text-center mt-10">
         <div className="w-16 h-16 bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -64,35 +64,14 @@ export default function VotingBallot({ candidates }) {
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Vote Recorded</h2>
-        <div className="bg-neutral-900 border border-neutral-800 p-6 rounded my-6">
-          <p className="text-xs text-neutral-500 uppercase mb-2">
-            Receipt Hash
-          </p>
-          <p className="text-xl font-mono text-blue-400 break-all">
-            {receiptHash}
-          </p>
-        </div>
-        <div className="bg-neutral-900 border border-neutral-800 p-4 rounded mb-6 text-left">
-          <p className="text-xs text-neutral-500 uppercase mb-3">
-            You voted for
-          </p>
-          <ul className="space-y-2">
-            {votedCandidates.map((name, i) => (
-              <li key={i} className="text-sm text-neutral-200 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                {name}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="text-sm text-neutral-400 mb-8">
-          Please screenshot this receipt.
+        <p className="text-neutral-400 text-sm mb-6">
+          Your vote has been submitted successfully.
         </p>
         <button
           onClick={() => window.location.reload()}
           className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-sm"
         >
-          Return to Login
+          Done
         </button>
       </div>
     );
