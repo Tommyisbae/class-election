@@ -12,6 +12,14 @@ export default function Results() {
   const [totalVotes, setTotalVotes] = useState(0);
   const [uniqueVoters, setUniqueVoters] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [electionEnded, setElectionEnded] = useState(false);
+
+  useEffect(() => {
+    const endTime = new Date(process.env.NEXT_PUBLIC_ELECTION_END);
+    if (new Date() >= endTime) {
+      setElectionEnded(true);
+    }
+  }, []);
 
   const fetchResults = async () => {
     setIsRefreshing(true);
@@ -30,8 +38,26 @@ export default function Results() {
   };
 
   useEffect(() => {
-    fetchResults();
-  }, []);
+    if (electionEnded) fetchResults();
+  }, [electionEnded]);
+
+  if (!electionEnded) {
+    return (
+      <div className="min-h-screen max-w-2xl mx-auto px-4 py-8">
+        <Head>
+          <title>Results</title>
+        </Head>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="bg-neutral-900 border border-neutral-800 p-8 rounded-lg">
+            <h2 className="text-xl font-bold mb-2">Results Not Available Yet</h2>
+            <p className="text-neutral-400">
+              Results will be published after voting ends.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen max-w-2xl mx-auto px-4 py-8">
@@ -41,7 +67,7 @@ export default function Results() {
 
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Live Results</h1>
+          <h1 className="text-2xl font-bold">Results</h1>
           <p className="text-neutral-500 text-sm">
             Senatorial Election &middot; {uniqueVoters} voter{uniqueVoters !== 1 ? "s" : ""}
           </p>

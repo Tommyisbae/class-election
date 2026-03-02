@@ -67,12 +67,14 @@ export default function Home({ initialCandidates }) {
           >
             Verify Vote
           </Link>
-          <Link
-            href="/results"
-            className="text-sm text-blue-500 hover:text-blue-400 font-medium"
-          >
-            Live Results &rarr;
-          </Link>
+          {timeStatus === "closed" && (
+            <Link
+              href="/results"
+              className="text-sm text-blue-500 hover:text-blue-400 font-medium"
+            >
+              Results &rarr;
+            </Link>
+          )}
         </div>
       </header>
 
