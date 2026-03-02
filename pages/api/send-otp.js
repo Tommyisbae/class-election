@@ -7,13 +7,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY, // MUST be the Service Role key to update the DB
 );
 
-// Configure Nodemailer with Gmail
+// Configure Nodemailer with Gmail + connection pooling
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 50,
+  rateDelta: 1000,
+  rateLimit: 10,
 });
 
 export default async function handler(req, res) {
@@ -130,19 +135,7 @@ export default async function handler(req, res) {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
 
-    // 8. Save OTP to database and reset attempts
-    const { error: updateError } = await supabase
-      .from("voters")
-      .update({
-        current_otp: otp,
-        otp_expiry: expiryDate.toISOString(),
-        otp_attempts: 0,
-      })
-      .eq("matric_number", matricNumber);
-
-    if (updateError) throw new Error("Failed to save OTP to database.");
-
-    // 9. Send the Email
+    // 8. Send the Email FIRST (don't save OTP if email fails)
     const mailOptions = {
       from: `"Class Electoral Committee" <${process.env.GMAIL_USER}>`,
       to: voter.email,
@@ -163,6 +156,18 @@ export default async function handler(req, res) {
     };
 
     await transporter.sendMail(mailOptions);
+
+    // 9. Email sent successfully — now save OTP to database
+    const { error: updateError } = await supabase
+      .from("voters")
+      .update({
+        current_otp: otp,
+        otp_expiry: expiryDate.toISOString(),
+        otp_attempts: 0,
+      })
+      .eq("matric_number", matricNumber);
+
+    if (updateError) throw new Error("Failed to save OTP to database.");
 
     // 10. Return Success
     const maskedEmail = voter.email.replace(
